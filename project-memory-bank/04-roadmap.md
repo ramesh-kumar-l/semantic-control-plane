@@ -6,8 +6,8 @@
 | Phase | Name | Status |
 |---|---|---|
 | 0 | Memory Bank Bootstrap | **Complete** |
-| 1 | Memory Core | **Implemented — awaiting Phase Gate approval** |
-| 2 | Knowledge Graph | Not started |
+| 1 | Memory Core | **Complete — Phase Gate approved** |
+| 2 | Knowledge Graph | **Implemented — awaiting Phase Gate approval** |
 | 3 | Semantic Query Engine | Not started |
 | 4 | Trust Engine | Not started |
 | 5 | Agent Runtime | Not started |
@@ -22,6 +22,10 @@ Trust metadata (source, provenance, confidence, verification, temporal context) 
 
 ## Phase 2 — Knowledge Graph
 Entity Management · Relationship Management · Graph Storage · Graph Traversal · Graph Query Engine.
+Implemented under `scp/graph/` behind a `GraphStore` port (ADR-003); entities and
+relationships carry the same first-class trust primitives as memories. Traversal is
+application-side BFS (`breadth_first`, `shortest_path`). Semantic/vector retrieval over
+the graph is explicitly **out of scope** here — it belongs to Phase 3.
 
 ## Phase 3 — Semantic Query Engine
 Hybrid Retrieval · Vector Search · Graph Search · Ranking · Query Planning.

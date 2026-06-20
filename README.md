@@ -8,9 +8,11 @@ The authoritative design and rules live in [`project-memory-bank/`](project-memo
 Read `99-development-rules.md` and `03-current-state.md` first.
 
 ## Status
-Phase 1 **Memory Core** — first vertical slice implemented (storage, retrieval,
-lifecycle, consolidation, compression) with trust metadata first-class on every
-record. See `project-memory-bank/04-roadmap.md`.
+Phase 1 **Memory Core** complete (storage, retrieval, lifecycle, consolidation,
+compression). Phase 2 **Knowledge Graph** implemented (entities, relationships, graph
+storage, BFS traversal, queries) — awaiting its Phase Gate. Trust metadata is
+first-class on every memory, entity, and relationship. See
+`project-memory-bank/04-roadmap.md`.
 
 ## Quickstart
 ```bash
@@ -43,5 +45,6 @@ asyncio.run(main())
 
 ## Layout
 - `scp/memory/` — Memory Core (models, port, backends, lifecycle, service).
+- `scp/graph/` — Knowledge Graph (models, port, backends, traversal, service).
 - `tests/` — unit + integration tests (mirrors source paths).
 - `project-memory-bank/` — source of truth: vision, architecture, roadmap, ADRs, rules.
