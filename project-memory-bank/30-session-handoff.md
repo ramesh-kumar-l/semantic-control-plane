@@ -1,39 +1,42 @@
 # 30 — Session Handoff
 
-_Last updated: 2026-06-21_
+_Last updated: 2026-06-20_
 
 ## This Session
-- **Did:** Implemented **Phase 4 Trust Engine** under `scp/trust/`. Built a `SourceRegistry`
-  (reliability weighting), a `ConfidenceModel` (real per-source initial confidence), an
-  explainable `scoring` model (`base = weighted blend of reliability/confidence/recency`,
-  gated by a verification factor; `TrustAssessment` retains all components + a reconstructable
-  explanation), a signal-driven `VerificationPolicy` state machine, a `ContradictionDetector`
-  with reliability-weighted `reconcile`, and the pure/synchronous `TrustEngine` service.
-- **Replaced the 0.5 placeholder** via an **additive** optional `confidence_model` callable
-  injected into `MemoryCore` and `KnowledgeGraph` (default `None` preserves behavior). No
-  Phase 1/2 → Phase 4 import — clean dependency inversion; wiring is at the composition root.
-  Phase 3 ranking is untouched and improves automatically once stored confidence is real.
-- **Decided:** ADR-005 — explainable weighted-blend scoring with a verification gate; pure
-  synchronous engine (no I/O, no storage access); replacement by injection, not modification.
-- **Verified:** ruff clean (71 files), `mypy --strict` clean (42 files), **120 tests pass**
-  (32 memory + 33 graph + 25 query + 30 trust); zero regressions in prior phases.
-- **Also:** recorded **Phase 3 Semantic Query Engine Phase Gate as approved** (the user moved
-  on to Phase 4), so the `Embedder`/`VectorStore` ports + `SemanticQueryEngine` API are protected.
+- **Phase 4 Gate approved** (user directed Phase 5 without objection). `TrustEngine` public
+  API and `confidence_model` injection points on `MemoryCore`/`KnowledgeGraph` are now
+  protected architecture.
+- **Did:** Implemented **Phase 5 Agent Runtime** under `scp/agent/`. Built:
+  - `ContextAssembler` — assembles `AgentContext` via `SemanticQueryEngine.search()`, then
+    fetches each result entity from `KnowledgeGraph.get_entity()`, then calls
+    `TrustEngine.assess()` for full explainable trust score + explanation string.
+  - `ToolRegistry` + `Tool` structural protocol — `register/invoke`; tool errors captured
+    as `ToolResult(ERROR)` (non-fatal).
+  - `AgentLifecycle` — pure in-memory state machine; enforces documented transition graph
+    (IDLE→RUNNING, RUNNING→{PAUSED,STOPPED,FAILED}, PAUSED→{RUNNING,STOPPED}).
+  - `AgentRuntime` service — `create_agent/run_step/pause_agent/resume_agent/stop_agent`;
+    `run_step` persists each step to `MemoryCore` EPISODIC memory for auditability.
+- **Trust:** every `ContextItem` carries `trust_score` from `TrustEngine.assess()` (not 0.5)
+  and a human-readable `explanation`. Phase 4 injection is exercised at every step.
+- **Decided:** ADR-006 — three-layer decomposition (Assembler/Registry/Lifecycle); in-memory
+  lifecycle for Phase 5; EPISODIC memory persistence; non-fatal tool errors.
+- **Verified:** `ruff` clean, `mypy --strict` clean (8 files), **155 tests pass** (35 agent
+  + 120 prior = 0 regressions).
 
 ## Next Session — Start Here
-1. Load: `99` → `03-current-state.md` → `02` → `14-trust-model.md`.
-2. **Phase Gate decision pending** for Phase 4. If approved, plan **INIT-006 (Phase 5 Agent
-   Runtime)** — do not start it before approval (`99` §4).
-3. Prefer Extension > Modification (`99` §3). Protected (changes need an ADR): the
-   `MemoryStore` / `GraphStore` / `VectorStore` / `Embedder` ports, the `MemoryCore` /
-   `KnowledgeGraph` / `SemanticQueryEngine` / `TrustEngine` public APIs, and the
-   `confidence_model` injection points on `MemoryCore` / `KnowledgeGraph`.
+1. Load: `99` → `03-current-state.md` → `02` → `30-session-handoff.md`.
+2. **Phase Gate decision pending** for Phase 5. If approved, plan **INIT-007 (Phase 6
+   Agent Flight Recorder)** — do not start before approval (`99` §4).
+3. Protected (changes need an ADR): all prior ports (`MemoryStore`, `GraphStore`,
+   `VectorStore`, `Embedder`), all prior service APIs (`MemoryCore`, `KnowledgeGraph`,
+   `SemanticQueryEngine`, `TrustEngine`), the `confidence_model` injection points, AND the
+   new Phase 5 public API (`AgentRuntime`, `ContextAssembler`, `ToolRegistry`, `AgentLifecycle`).
 
 ## Open Decisions
-- Approve Phase 4 completion? (Phase Gate.)
-- Route Phase 3 ranking's trust signal through `TrustEngine.assess` (so ranking also factors
-  recency + source reliability)? Documented follow-up in ADR-005 — needs an extension/ADR.
-- Learned confidence/trust model + semantic (non-string) contradiction detection: future ADRs.
+- Approve Phase 5 completion? (Phase Gate.)
+- Tool timeout enforcement (follow-up from ADR-006) — not yet implemented.
+- Durable `AgentStore` port for restart-survival (follow-up from ADR-006).
+- Route Phase 3 ranking through `TrustEngine.assess` (documented follow-up in ADR-005).
 
 ## Guardrails Reminder
 - Extension > Modification > Rewrite. Trust is first-class. No future-phase work.

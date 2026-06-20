@@ -5,12 +5,12 @@
 _Last updated: 2026-06-20_
 
 ## Repository
-- `project-memory-bank/` (source of truth) + `adr/` (ADR-000..005).
+- `project-memory-bank/` (source of truth) + `adr/` (ADR-000..006).
 - Python project scaffolded: `pyproject.toml`, `.gitignore`, `scp/` package, `tests/`.
 - `.venv/` local dev environment (git-ignored).
 
 ## What Exists Now (code)
-- **Phase 1 Memory Core — first vertical slice implemented** under `scp/memory/`:
+- **Phase 1 Memory Core — implemented** under `scp/memory/`:
   - `models.py` — `MemoryRecord` with inseparable `TrustMetadata` + `TemporalContext`.
   - `enums.py` — memory type, source type, verification status, lifecycle state, provenance op.
   - `errors.py` — typed exceptions (not-found, duplicate, invalid-transition, consolidation).
@@ -63,19 +63,29 @@ _Last updated: 2026-06-20_
   `confidence_model` callable; default `None` preserves prior behavior. Wiring it to
   `TrustEngine.initial_confidence` replaces the 0.5 placeholder in the live path with no
   Phase 1/2 → Phase 4 import (dependency inversion). Phase 3 ranking is unchanged.
+- **Phase 5 Agent Runtime — implemented** under `scp/agent/`. See ADR-006:
+  - `enums.py` — `AgentStatus` (IDLE/RUNNING/PAUSED/STOPPED/FAILED) + `ToolStatus`.
+  - `errors.py` — typed exceptions (not-found, not-running, tool errors, lifecycle, max-steps).
+  - `models.py` — `AgentConfig`, `AgentContext`, `ContextItem`, `ToolCall`, `ToolResult`,
+    `AgentStep`, `AgentState`.
+  - `tools.py` — `Tool` structural protocol + `ToolRegistry` (non-fatal error capture).
+  - `context.py` — `ContextAssembler` (semantic search + per-result trust assessment
+    via `SemanticQueryEngine`, `TrustEngine`, `KnowledgeGraph`; returns `AgentContext`).
+  - `lifecycle.py` — `AgentLifecycle` (in-memory; enforces the documented transition graph).
+  - `runtime.py` — `AgentRuntime` service (create/run_step/pause/resume/stop; persists
+    each step to `MemoryCore` as `EPISODIC` memory; all access via public APIs only).
 
-## Verification (latest session — Phase 4)
-- `ruff check` + `ruff format --check`: clean (71 files).
-- `mypy --strict scp`: clean (42 source files).
-- `pytest`: **120 passed** (32 memory + 33 graph + 25 query + 30 trust: registry,
-  confidence, scoring, verification, contradiction, engine, and integration tests).
-- **Exit criterion met:** scores explainable and reproducible (identical `TrustAssessment`
-  for identical inputs); 0.5 placeholder replaced by real source-aware confidence when
-  the Trust Engine is wired; verified > unverified > disputed > contradicted ordering
-  held by scoring gate; `ContradictionDetector` finds value-mismatch and polarity conflicts;
-  `VerificationPolicy` blocks CONTRADICTED → VERIFIED directly (requires REOPEN first).
+## Verification (latest session — Phase 5)
+- `ruff check` + `ruff format --check`: clean (all agent files).
+- `mypy --strict scp/agent`: clean (8 source files).
+- `pytest`: **155 passed** (32 memory + 33 graph + 25 query + 30 trust + 35 agent:
+  lifecycle, tools, context, runtime, and integration tests).
+- **Exit criterion met:** agent reads Knowledge Graph entity in context; agent writes
+  EPISODIC memory after each step; context items carry real TrustEngine scores (not 0.5);
+  full lifecycle IDLE→RUNNING→PAUSED→RUNNING→STOPPED exercised; tool invocation captured;
+  max_steps exceeded → FAILED; no regressions in Phases 1–4.
 - Phase 3 exit (hybrid recall@5 = 1.0 vs baseline 0.0) still green.
-- All earlier Phase 1/2/3 tests still pass (120 total, no regressions).
+- Phase 4 exit (explainable/reproducible trust scores; 0.5 placeholder replaced) still green.
 
 ## Stack
 - Python 3.12+ (dev/test ran on 3.14), async-first, `pydantic` v2, `aiosqlite`.
@@ -90,26 +100,24 @@ _Last updated: 2026-06-20_
 - **Phase 3 (Semantic Query Engine): Complete (Phase Gate approved).**
   Hybrid vector + graph retrieval, trust-aware ranking, query planning done; hybrid
   beats the vector-only baseline on the fixture set (ADR-004).
-- **Phase 4 (Trust Engine): Implemented, awaiting Phase Gate approval.**
+- **Phase 4 (Trust Engine): Complete (Phase Gate approved).**
   Explainable trust scoring, confidence model, source registry, verification policy,
   contradiction detection; replaces the 0.5 confidence placeholder via additive
-  injection (ADR-005).
+  injection (ADR-005). Approved when user directed Phase 5 continuation.
+- **Phase 5 (Agent Runtime): Implemented, awaiting Phase Gate approval.**
+  Context assembly, tool invocation, memory access, agent lifecycle (ADR-006).
+  Every step persists to EPISODIC memory; trust scores are real + explainable.
 - All later phases: Not started.
 
 ## Known Constraints / Deferred
 - Compression is deterministic truncation; semantic (LLM) summarisation deferred.
 - Content is a string payload; structured payloads deferred.
 - Graph properties are free-form `dict[str, str]`; typed property schemas deferred.
-- Traversal is application-side BFS over the `neighbors` primitive; native-graph /
-  recursive-CTE adapters are a future ADR behind the same `GraphStore` port (ADR-003).
-- Embeddings are deterministic lexical feature-hashing (bag-of-words), not learned;
-  a model-based `Embedder` is a future ADR behind the same port (ADR-004).
-- The vector index is in-memory brute-force cosine and rebuildable from the graph;
-  an ANN / pgvector / durable `VectorStore` adapter is a future ADR behind the same port.
-- Query planning is rule-based; cost-based planning is a documented follow-up.
-- Postgres adapters are a future ADR behind the same ports when multi-node scale is needed.
-- Trust *scoring* now exists (Phase 4, ADR-005): the 0.5 placeholder is replaced by a real
-  source-aware `ConfidenceModel` when the Trust Engine is wired (it remains only as a
-  backward-compatible fallback). Trust weights and contradiction detection are documented
-  heuristics (not learned); routing Phase 3 ranking through `TrustEngine.assess` and a
-  learned/semantic trust model are documented follow-ups (ADR-005).
+- Traversal is application-side BFS; native-graph / recursive-CTE adapters future ADR.
+- Embeddings are deterministic lexical feature-hashing; model-based `Embedder` future ADR.
+- Vector index is in-memory brute-force; ANN / pgvector durable adapter future ADR.
+- Query planning is rule-based; cost-based planning future follow-up.
+- Postgres adapters future ADR when multi-node scale is needed.
+- Trust weights and contradiction detection are documented heuristics (not learned).
+- Agent lifecycle is in-memory only; a durable `AgentStore` port is a future ADR (ADR-006).
+- Tool timeout enforcement is not yet implemented (follow-up from ADR-006).
