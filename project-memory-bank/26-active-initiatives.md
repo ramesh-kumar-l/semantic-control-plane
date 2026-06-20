@@ -5,20 +5,26 @@
 _Last updated: 2026-06-20 (Phase 6)_
 
 ## Active
-### INIT-007 — Phase 6 Agent Flight Recorder
+### INIT-008 — Phase 7 Governance Layer
 - **Status:** Implemented — **awaiting Phase Gate approval.**
-- **Delivered:** `scp/recorder/` package; `ReplayEngine` (ordered step replay, range slicing);
-  `TraceEngine` (entity → TraceAppearance → Trace; cross-agent and scoped); `DebugEngine`
-  (root-cause report: trust-sorted context, tool outcomes, trust signals, related steps);
-  `FlightRecorder` service (single entry point: record/replay/trace/root_cause);
-  `RecordStore` port + `InMemoryRecordStore` backend.
-- **Decoupling:** caller passes `AgentStep` to `recorder.record()` — recorder never touches
-  `AgentRuntime` internals. Phase 5 code unchanged.
-- **Exit met:** ordered replay, entity tracing, root-cause analysis implemented; 29 recorder
-  tests (replay ×8, trace ×8, debug ×7, integration ×5); 184 total; 0 regressions.
-- **Decision recorded:** ADR-007.
+- **Delivered:** `scp/governance/` package; `PolicyEngine` (trust threshold + verification status
+  conditions; AND logic; CONTEXT_ITEM + AGENT_STEP scope); `AuditLogger` (immutable
+  `AuditEvent` records; compliance report); `GovernanceLayer` service (single entry point:
+  policy CRUD + govern_context_item + govern_step + audit trail + compliance_report);
+  `PolicyStore` + `AuditStore` ports + `InMemoryPolicyStore` + `InMemoryAuditStore` backends.
+- **Decoupling:** accepts Phase 5 public models (`ContextItem`, `AgentStep`); verification
+  status passed explicitly by caller. No Phase 1–6 code modified.
+- **Exit met:** policy gates enforced on trust thresholds + verification status; full audit
+  trail; compliance report (DENY=violation, WARN=warning, REQUIRE_REVIEW=review_required);
+  37 governance tests (engine ×11, audit ×7, governance ×10, integration ×5); 221 total; 0
+  regressions.
+- **Decision recorded:** ADR-008.
 
 ## Completed
+### INIT-007 — Phase 6 Agent Flight Recorder
+- **Status:** Complete (Phase Gate approved by user directing Phase 7).
+- `scp/recorder/` package; `ReplayEngine` + `TraceEngine` + `DebugEngine` + `FlightRecorder`;
+  `RecordStore` port + `InMemoryRecordStore`. Additive — Phase 5 unchanged. ADR-007.
 ### INIT-006 — Phase 5 Agent Runtime
 - **Status:** Complete (Phase Gate approved by user directing Phase 6).
 - `scp/agent/` package; `ContextAssembler` + `ToolRegistry` + `AgentLifecycle` + `AgentRuntime`;
@@ -45,11 +51,11 @@ _Last updated: 2026-06-20 (Phase 6)_
 - **Status:** Complete. Established the memory bank + Python stack. ADR-001.
 
 ## Next Candidate (awaiting approval)
-### INIT-008 — Phase 7 Governance Layer
-- **Status:** Proposed, blocked by Phase 6 gate approval.
-- Policies · Compliance · Controls · Auditing.
-- Policy gates enforced on trust thresholds + verification status; full audit trail.
-- Do not start before Phase 6 passes its gate (`99` §4).
+### INIT-009 — Future phases (Observability Engine, Developer Console, etc.)
+- **Status:** Not planned — SCP phases 0-7 are now complete pending gate approvals.
+- Durable backend adapters (SqliteAuditStore, SqliteRecordStore, SqliteAgentStore).
+- Role-based access control on governance API.
+- Pre-built compliance policy bundles (GDPR baseline, high-trust-only).
 
 ## Backlog (not scheduled)
 - Learned `Embedder`, ANN/pgvector `VectorStore`, Postgres / native-graph adapters (future ADRs).

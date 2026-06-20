@@ -75,6 +75,21 @@ _Last updated: 2026-06-20 (Phase 6)_
   - `runtime.py` — `AgentRuntime` service (create/run_step/pause/resume/stop; persists
     each step to `MemoryCore` as `EPISODIC` memory; all access via public APIs only).
 
+- **Phase 7 Governance Layer — implemented** under `scp/governance/`. See ADR-008:
+  - `enums.py` — `PolicyAction` (ALLOW/WARN/REQUIRE_REVIEW/DENY), `PolicyScope`
+    (CONTEXT_ITEM/AGENT_STEP), `AuditEventType`.
+  - `errors.py` — `GovernanceError`, `PolicyNotFoundError`, `PolicyViolationError`, `AuditError`.
+  - `models.py` — `PolicyCondition`, `Policy`, `PolicyEvaluation`, `AuditEvent`,
+    `ComplianceReport` (all frozen pydantic).
+  - `store.py` — `PolicyStore` + `AuditStore` ports (`@runtime_checkable` Protocol).
+  - `backends/in_memory.py` — `InMemoryPolicyStore` + `InMemoryAuditStore` (dict-backed).
+  - `engine.py` — `PolicyEngine`: `evaluate_context_item` (trust + verification conditions),
+    `evaluate_step` (average trust condition); AND logic across multi-field conditions.
+  - `audit.py` — `AuditLogger`: `log`, `get_event`, `trail`, `compliance_report`.
+  - `governance.py` — `GovernanceLayer` service: policy CRUD + `govern_context_item` +
+    `govern_step` + `get_audit_trail` + `compliance_report`.
+  - Additive only: **no Phases 1–6 code modified**.
+
 - **Phase 6 Agent Flight Recorder — implemented** under `scp/recorder/`. See ADR-007:
   - `errors.py` — typed exceptions (RecordNotFoundError, ReplayError, TraceError, DebugError).
   - `models.py` — `RecordedStep`, `RecordQuery`, `ReplaySession`, `TraceAppearance`, `Trace`,
@@ -89,16 +104,18 @@ _Last updated: 2026-06-20 (Phase 6)_
     immutable `RecordedStep` snapshot; replay/trace/debug surfaces delegated to sub-engines.
   - Additive only: **no Phase 5 code modified**.
 
-## Verification (latest session — Phase 6)
+## Verification (latest session — Phase 7)
 - `ruff check` + `ruff format --check`: clean (all scp + tests files).
-- `mypy --strict scp/recorder`: clean (10 source files); `mypy --strict scp`: clean (60 total).
-- `pytest`: **184 passed** (32 memory + 33 graph + 25 query + 30 trust + 35 agent + 29 recorder).
-- **Exit criterion met (Phase 6):** agent steps recorded as `RecordedStep` snapshots; ordered
-  replay via `ReplaySession`; entity trace across steps via `Trace`/`TraceAppearance`;
-  root-cause reports with trust-sorted context, tool outcomes, trust signals, related steps;
-  recorder independent of runtime (stopping an agent does not erase records);
-  29 recorder tests (replay ×8, trace ×8, debug ×7, integration ×5); no regressions Phases 1–5.
-- Phase 5 exit criteria still green (155 agent + prior tests all pass).
+- `mypy --strict scp/governance`: clean (10 source files).
+- `pytest`: **221 passed** (32 memory + 33 graph + 25 query + 30 trust + 35 agent + 29 recorder
+  + 37 governance); 0 regressions.
+- **Exit criterion met (Phase 7):** policy gates enforced on trust thresholds
+  (`min_trust_score`, `min_average_trust`) and verification status
+  (`forbidden_verification_status`); full audit trail persisted as immutable `AuditEvent`
+  records; `ComplianceReport` identifies violations (DENY), warnings (WARN), and
+  review-required events; `GovernanceLayer` fully independent of runtime;
+  37 governance tests (engine ×11, audit ×7, governance ×10, integration ×5); 0 regressions.
+- All prior exit criteria still green (184 prior tests all pass).
 
 ## Stack
 - Python 3.12+ (dev/test ran on 3.14), async-first, `pydantic` v2, `aiosqlite`.
@@ -120,9 +137,10 @@ _Last updated: 2026-06-20 (Phase 6)_
 - **Phase 5 (Agent Runtime): Complete (Phase Gate approved).**
   Context assembly, tool invocation, memory access, agent lifecycle (ADR-006).
   Every step persists to EPISODIC memory; trust scores are real + explainable.
-- **Phase 6 (Agent Flight Recorder): Implemented, awaiting Phase Gate approval.**
+- **Phase 6 (Agent Flight Recorder): Complete (Phase Gate approved).**
   Replay, tracing, root-cause analysis (ADR-007). Recorder decoupled from runtime.
-- Phase 7: Not started.
+- **Phase 7 (Governance Layer): Implemented, awaiting Phase Gate approval.**
+  Policy gates, audit trail, compliance controls (ADR-008). Decoupled from all prior phases.
 
 ## Known Constraints / Deferred
 - Compression is deterministic truncation; semantic (LLM) summarisation deferred.

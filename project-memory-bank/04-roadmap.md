@@ -11,8 +11,8 @@
 | 3 | Semantic Query Engine | **Complete — Phase Gate approved** |
 | 4 | Trust Engine | **Complete — Phase Gate approved** |
 | 5 | Agent Runtime | **Complete — Phase Gate approved** |
-| 6 | Agent Flight Recorder | **Implemented — awaiting Phase Gate approval** |
-| 7 | Governance Layer | Not started |
+| 6 | Agent Flight Recorder | **Complete — Phase Gate approved** |
+| 7 | Governance Layer | **Implemented — awaiting Phase Gate approval** |
 
 ## Phase 1 — Memory Core
 Capabilities: Memory Storage · Retrieval · Consolidation · Compression · Lifecycle Management.
