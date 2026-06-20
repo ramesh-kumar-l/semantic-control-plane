@@ -2,7 +2,7 @@
 
 > This file is the canonical **implementation-status** record for SCP.
 
-_Last updated: 2026-06-20_
+_Last updated: 2026-06-20 (Phase 6)_
 
 ## Repository
 - `project-memory-bank/` (source of truth) + `adr/` (ADR-000..006).
@@ -75,17 +75,30 @@ _Last updated: 2026-06-20_
   - `runtime.py` — `AgentRuntime` service (create/run_step/pause/resume/stop; persists
     each step to `MemoryCore` as `EPISODIC` memory; all access via public APIs only).
 
-## Verification (latest session — Phase 5)
-- `ruff check` + `ruff format --check`: clean (all agent files).
-- `mypy --strict scp/agent`: clean (8 source files).
-- `pytest`: **155 passed** (32 memory + 33 graph + 25 query + 30 trust + 35 agent:
-  lifecycle, tools, context, runtime, and integration tests).
-- **Exit criterion met:** agent reads Knowledge Graph entity in context; agent writes
-  EPISODIC memory after each step; context items carry real TrustEngine scores (not 0.5);
-  full lifecycle IDLE→RUNNING→PAUSED→RUNNING→STOPPED exercised; tool invocation captured;
-  max_steps exceeded → FAILED; no regressions in Phases 1–4.
-- Phase 3 exit (hybrid recall@5 = 1.0 vs baseline 0.0) still green.
-- Phase 4 exit (explainable/reproducible trust scores; 0.5 placeholder replaced) still green.
+- **Phase 6 Agent Flight Recorder — implemented** under `scp/recorder/`. See ADR-007:
+  - `errors.py` — typed exceptions (RecordNotFoundError, ReplayError, TraceError, DebugError).
+  - `models.py` — `RecordedStep`, `RecordQuery`, `ReplaySession`, `TraceAppearance`, `Trace`,
+    `RootCauseReport` (all frozen pydantic).
+  - `store.py` — `RecordStore` **port** (`@runtime_checkable` Protocol).
+  - `backends/in_memory.py` — `InMemoryRecordStore` (dict-backed, filtered query).
+  - `replay.py` — `ReplayEngine`: `replay_step(step_id)`, `replay_agent(agent_id, from/to)`.
+  - `trace.py` — `TraceEngine`: `trace_entity(entity_id, agent_id?)`, `trace_step(step_id)`.
+  - `debug.py` — `DebugEngine`: `root_cause(step_id)` → `RootCauseReport` with sorted context
+    items, extracted trust signals, and related step_ids via shared entity lookup.
+  - `recorder.py` — `FlightRecorder` service: composes all three engines; `record(step)` →
+    immutable `RecordedStep` snapshot; replay/trace/debug surfaces delegated to sub-engines.
+  - Additive only: **no Phase 5 code modified**.
+
+## Verification (latest session — Phase 6)
+- `ruff check` + `ruff format --check`: clean (all scp + tests files).
+- `mypy --strict scp/recorder`: clean (10 source files); `mypy --strict scp`: clean (60 total).
+- `pytest`: **184 passed** (32 memory + 33 graph + 25 query + 30 trust + 35 agent + 29 recorder).
+- **Exit criterion met (Phase 6):** agent steps recorded as `RecordedStep` snapshots; ordered
+  replay via `ReplaySession`; entity trace across steps via `Trace`/`TraceAppearance`;
+  root-cause reports with trust-sorted context, tool outcomes, trust signals, related steps;
+  recorder independent of runtime (stopping an agent does not erase records);
+  29 recorder tests (replay ×8, trace ×8, debug ×7, integration ×5); no regressions Phases 1–5.
+- Phase 5 exit criteria still green (155 agent + prior tests all pass).
 
 ## Stack
 - Python 3.12+ (dev/test ran on 3.14), async-first, `pydantic` v2, `aiosqlite`.
@@ -104,10 +117,12 @@ _Last updated: 2026-06-20_
   Explainable trust scoring, confidence model, source registry, verification policy,
   contradiction detection; replaces the 0.5 confidence placeholder via additive
   injection (ADR-005). Approved when user directed Phase 5 continuation.
-- **Phase 5 (Agent Runtime): Implemented, awaiting Phase Gate approval.**
+- **Phase 5 (Agent Runtime): Complete (Phase Gate approved).**
   Context assembly, tool invocation, memory access, agent lifecycle (ADR-006).
   Every step persists to EPISODIC memory; trust scores are real + explainable.
-- All later phases: Not started.
+- **Phase 6 (Agent Flight Recorder): Implemented, awaiting Phase Gate approval.**
+  Replay, tracing, root-cause analysis (ADR-007). Recorder decoupled from runtime.
+- Phase 7: Not started.
 
 ## Known Constraints / Deferred
 - Compression is deterministic truncation; semantic (LLM) summarisation deferred.
@@ -121,3 +136,5 @@ _Last updated: 2026-06-20_
 - Trust weights and contradiction detection are documented heuristics (not learned).
 - Agent lifecycle is in-memory only; a durable `AgentStore` port is a future ADR (ADR-006).
 - Tool timeout enforcement is not yet implemented (follow-up from ADR-006).
+- `RecordStore` is in-memory only; `SqliteRecordStore` is a future ADR (ADR-007).
+- Replay is pull-based (caller records); auto-recording hook on `AgentRuntime` is deferred.

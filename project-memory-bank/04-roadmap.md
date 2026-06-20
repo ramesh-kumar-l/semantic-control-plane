@@ -10,8 +10,8 @@
 | 2 | Knowledge Graph | **Complete — Phase Gate approved** |
 | 3 | Semantic Query Engine | **Complete — Phase Gate approved** |
 | 4 | Trust Engine | **Complete — Phase Gate approved** |
-| 5 | Agent Runtime | **Implemented — awaiting Phase Gate approval** |
-| 6 | Agent Flight Recorder | Not started |
+| 5 | Agent Runtime | **Complete — Phase Gate approved** |
+| 6 | Agent Flight Recorder | **Implemented — awaiting Phase Gate approval** |
 | 7 | Governance Layer | Not started |
 
 ## Phase 1 — Memory Core
@@ -52,8 +52,11 @@ exercised, 35 agent tests pass; **awaiting Phase Gate approval**.
 ## Phase 6 — Agent Flight Recorder
 Replay · Debugging · Traceability · Root Cause Analysis.
 Every agent decision reconstructable from recorded evidence.
+Implemented under `scp/recorder/` (ADR-007): `ReplayEngine` (ordered step replay),
+`TraceEngine` (entity → step linkage), `DebugEngine` (root-cause reports),
+`FlightRecorder` service (single entry point). Additive — Phase 5 unchanged.
 Exit criteria: any agent decision replayable from recorded steps; root-cause debuggable;
-all tests pass; gate approved.
+all tests pass; **awaiting Phase Gate approval**.
 
 ## Phase 7 — Governance Layer
 Policies · Compliance · Controls · Auditing.
