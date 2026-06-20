@@ -32,3 +32,16 @@ Ingest → Active → Consolidate → Compress → Archive → Expire
 
 ## Phase 1 Scope (first vertical slice)
 Storage + retrieval + lifecycle state, with trust metadata fields present and populated (even if some scores are placeholder-default until the Trust Engine exists). Consolidation/compression designed now, implemented within Phase 1 per the roadmap's capability list.
+
+## Implemented Semantics (Phase 1)
+- **Allowed transitions:** ACTIVE → {CONSOLIDATED, COMPRESSED, ARCHIVED, EXPIRED};
+  CONSOLIDATED → {COMPRESSED, ARCHIVED, EXPIRED}; COMPRESSED → {ARCHIVED, EXPIRED};
+  ARCHIVED → {EXPIRED}; EXPIRED is terminal. Illegal transitions raise.
+- **Consolidation:** merging ≥2 memories produces one new `CONSOLIDATED` record;
+  highest-confidence input is primary (its source/verification win), confidence is the
+  max, distinct contents are merged, full provenance is preserved with a CONSOLIDATE
+  entry listing parent ids. The original memories are moved to `ARCHIVED` with a
+  "superseded by <id>" provenance entry.
+- **Compression:** deterministic truncation to an essence (default 280 chars) with a
+  marker, retaining all trust fields. Semantic (LLM) summarisation is deferred.
+- Code: `scp/memory/lifecycle.py` (pure) + `scp/memory/core.py` (orchestration).

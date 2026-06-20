@@ -37,5 +37,6 @@ The **primary source of truth** for the Semantic Control Plane (SCP). Never assu
 ### Decision Records
 - `adr/ADR-000-template.md` — ADR template.
 - `adr/ADR-001-python-stack.md` — Python chosen as implementation stack.
+- `adr/ADR-002-memory-core-storage.md` — SQLite behind a `MemoryStore` port (Phase 1).
 
 > Keep these files synchronized with implementation progress. Update `03`, `26`, and `30` at the end of each session.

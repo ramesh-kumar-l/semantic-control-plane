@@ -5,8 +5,8 @@
 ## Phase Status Overview
 | Phase | Name | Status |
 |---|---|---|
-| 0 | Memory Bank Bootstrap | **Complete** (this initiative) |
-| 1 | Memory Core | **Not started** |
+| 0 | Memory Bank Bootstrap | **Complete** |
+| 1 | Memory Core | **Implemented — awaiting Phase Gate approval** |
 | 2 | Knowledge Graph | Not started |
 | 3 | Semantic Query Engine | Not started |
 | 4 | Trust Engine | Not started |
@@ -14,7 +14,7 @@
 | 6 | Agent Flight Recorder | Not started |
 | 7 | Governance Layer | Not started |
 
-> **Correction:** The operating prompt described Phase 1 as "potentially complete." The repository contains no code (only `LICENSE` + `README.md`). Phase 1 is therefore **Not started**. Do not act on a "complete" premise.
+> **History:** The operating prompt originally described Phase 1 as "potentially complete" against an empty repo — that was false. Phase 1 was started greenfield and the first vertical slice (storage, retrieval, lifecycle, consolidation, compression, with trust built in) is now implemented and tested (`03-current-state.md`), pending the Phase Gate.
 
 ## Phase 1 — Memory Core
 Capabilities: Memory Storage · Retrieval · Consolidation · Compression · Lifecycle Management.

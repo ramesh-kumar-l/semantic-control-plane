@@ -3,19 +3,28 @@
 _Last updated: 2026-06-20_
 
 ## This Session
-- **Did:** Bootstrapped the `project-memory-bank/` from an empty repo. Created all 11 named files + memory-bank `README.md` + `adr/` (`ADR-000-template.md`, `ADR-001-python-stack.md`).
-- **Decided:** Implementation stack = **Python** (3.12+, async, pydantic v2, FastAPI-style; ruff/mypy/pytest).
-- **Corrected:** Phase 1 Memory Core is **Not started** (repo has no code), contrary to the operating prompt's "potentially complete."
-- **Did NOT do (out of scope):** any application code, Python project scaffolding, or Phase 1 implementation.
+- **Did:** Implemented the **Phase 1 Memory Core** first vertical slice in Python.
+  Scaffolded the project (`pyproject.toml`, `scp/`, `tests/`). Built the
+  `MemoryStore` port with `InMemoryStore` + `SqliteStore` adapters, the `MemoryCore`
+  service (store/get/query/consolidate/compress/archive/expire), and trust + temporal
+  metadata on every record.
+- **Decided:** ADR-002 — SQLite as the Phase 1 durable backend behind a swappable port.
+- **Verified:** ruff clean, `mypy --strict` clean (11 files), **32 tests pass**;
+  SQLite latency p95 ≤ 7ms (well under the 150ms NFR).
+- **Note on file naming:** the user's `implementation-status.md` / `active-context.md`
+  map to the canonical `03-current-state.md` / `26-active-initiatives.md` (single
+  source of truth — no duplicate files were created).
 
 ## Next Session — Start Here
-1. Load (in order): `99-development-rules.md` → `03-current-state.md` → `02-system-architecture.md` → `11-memory-model.md`.
-2. Pick up **INIT-002** (`26-active-initiatives.md`): plan Phase 1 Memory Core and scaffold the Python project.
-3. Resolve the open storage-backend decision via an ADR before implementing.
-4. Follow phase discipline — Phase 1 only; end with the Phase Gate Protocol.
+1. Load: `99` → `03-current-state.md` → `02` → `11-memory-model.md`.
+2. **Phase Gate decision pending** for Phase 1. If approved, plan **INIT-003 (Phase 2
+   Knowledge Graph)** — do not start it before approval (`99` §4).
+3. If changes to Phase 1 are requested, prefer Extension > Modification (`99` §3); the
+   `MemoryStore` port and `MemoryCore` public API are protected (changes need an ADR).
 
 ## Open Decisions
-- Storage backends (vector DB, graph store, KV) — unselected. Needs ADR.
+- Approve Phase 1 completion? (Phase Gate.)
+- Postgres adapter + vector/graph storage remain future ADRs (Phases 2–3 / scale).
 
 ## Guardrails Reminder
 - Extension > Modification > Rewrite. Trust is first-class. No future-phase work.

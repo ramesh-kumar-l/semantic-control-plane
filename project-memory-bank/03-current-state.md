@@ -1,26 +1,44 @@
 # 03 — Current State
 
+> This file is the canonical **implementation-status** record for SCP.
+
 _Last updated: 2026-06-20_
 
 ## Repository
-- Tracked files before this session: `LICENSE`, `README.md` (README contains only the project title).
-- **No application code. No tests. No build/packaging.**
+- `project-memory-bank/` (source of truth) + `adr/` (ADR-000..002).
+- Python project scaffolded: `pyproject.toml`, `.gitignore`, `scp/` package, `tests/`.
+- `.venv/` local dev environment (git-ignored).
 
-## What Exists Now
-- `project-memory-bank/` bootstrapped this session: strategic, execution, domain, and governance files + `adr/` (template + Python stack ADR) + memory-bank `README.md`.
+## What Exists Now (code)
+- **Phase 1 Memory Core — first vertical slice implemented** under `scp/memory/`:
+  - `models.py` — `MemoryRecord` with inseparable `TrustMetadata` + `TemporalContext`.
+  - `enums.py` — memory type, source type, verification status, lifecycle state, provenance op.
+  - `errors.py` — typed exceptions (not-found, duplicate, invalid-transition, consolidation).
+  - `store.py` — `MemoryStore` **port** + `MemoryQuery`.
+  - `backends/` — `InMemoryStore` (dev/test) + `SqliteStore` (durable, aiosqlite). See ADR-002.
+  - `lifecycle.py` — pure transitions, consolidation, compression.
+  - `core.py` — `MemoryCore` service (store/get/query/consolidate/compress/archive/expire).
+
+## Verification (this session)
+- `ruff check` + `ruff format --check`: clean.
+- `mypy --strict scp`: clean (11 files).
+- `pytest`: **32 passed** (models, lifecycle, both backends, service).
+- Performance (SQLite, durable commits): store p95 ≈ 6.3ms, get p95 ≈ 7.0ms,
+  query p95 ≈ 2.3ms — well under the 150ms NFR target.
 
 ## Stack
-- **Python** chosen as implementation language (Python 3.12+, async-first, `pydantic` v2, `FastAPI`-style services). Decided, **not yet scaffolded** — no `pyproject.toml`, no package layout. See `adr/ADR-001-python-stack.md`.
+- Python 3.12+ (dev/test ran on 3.14), async-first, `pydantic` v2, `aiosqlite`.
+  Tooling: `ruff`, `mypy --strict`, `pytest` + `pytest-asyncio`. See ADR-001.
 
 ## Phase Status
 - **Phase 0 (Memory Bank Bootstrap): Complete.**
-- **Phase 1 (Memory Core): Not started.** No storage/retrieval/consolidation/compression/lifecycle code exists.
+- **Phase 1 (Memory Core): Implemented, awaiting Phase Gate approval.**
+  Storage + retrieval + lifecycle + consolidation + compression done, trust built in.
 - All later phases: Not started.
 
-> **Important correction:** The operating prompt called Phase 1 "potentially complete." This is false against the repo — there is no code. Treat Phase 1 as greenfield.
-
-## Immediate Next Candidate (awaiting approval)
-- Plan + scaffold Phase 1 Memory Core (Python project skeleton + Memory Core storage/retrieval). See `26-active-initiatives.md` and `30-session-handoff.md`.
-
-## Known Constraints
-- Storage backends (vector DB, graph store, KV) not yet selected — to be chosen via ADR during Phase 1+ design.
+## Known Constraints / Deferred
+- Compression is deterministic truncation; semantic (LLM) summarisation deferred.
+- Content is a string payload; structured payloads deferred.
+- Vector/graph storage owned by Phases 2–3 (separate ADRs). Postgres adapter is a
+  future ADR behind the same `MemoryStore` port when multi-node scale is needed.
+- Real trust *scoring* is Phase 4; confidence currently defaults to 0.5 placeholder.

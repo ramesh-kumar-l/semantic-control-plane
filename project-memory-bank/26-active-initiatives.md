@@ -1,18 +1,27 @@
 # 26 — Active Initiatives
 
+> This file is the canonical **active-context** record for SCP.
+
 _Last updated: 2026-06-20_
 
 ## Active
+### INIT-002 — Phase 1 Memory Core: Scaffold & First Slice
+- **Status:** Implemented — **awaiting Phase Gate approval.**
+- **Delivered:** Python scaffold (`pyproject.toml`, `scp/`, `tests/`); `MemoryStore`
+  port + `InMemoryStore`/`SqliteStore` adapters (ADR-002); `MemoryCore` service with
+  store/get/query, lifecycle transitions, consolidation, and compression; trust +
+  temporal metadata on every record. 32 tests passing; mypy --strict & ruff clean.
+- **Decision recorded:** ADR-002 — SQLite as Phase 1 durable backend behind a port.
+
+## Completed
 ### INIT-001 — Bootstrap Memory Bank
-- **Status:** Complete.
-- **Outcome:** Created `project-memory-bank/` (strategic, execution, domain, governance files + `adr/` + README). Established Python as the implementation stack. Corrected Phase 1 status to "Not started."
+- **Status:** Complete. Established the memory bank + Python stack (ADR-001).
 
 ## Next Candidate (awaiting approval)
-### INIT-002 — Phase 1 Memory Core: Plan & Scaffold
-- **Status:** Proposed, not started.
-- **Scope:** Design Phase 1 Memory Core; scaffold the Python project (`pyproject.toml`, package layout, tooling: ruff/mypy/pytest); implement Memory Core storage + retrieval as the first vertical slice with trust metadata built in.
-- **Blocked by:** explicit user approval to begin Phase 1.
-- **Open decisions:** storage backend selection (vector/graph/KV) — to be resolved via ADR during design.
+### INIT-003 — Phase 2 Knowledge Graph
+- **Status:** Proposed, blocked by Phase 1 gate approval.
+- Do not start before Phase 1 passes its gate (`99` §4, `04-roadmap.md`).
 
 ## Backlog (not scheduled)
-- Phases 2–7 per `04-roadmap.md`. Do not start before Phase 1 passes its phase gate.
+- Phases 3–7 per `04-roadmap.md`.
+- Postgres `MemoryStore` adapter (future ADR) when horizontal scale is needed.
