@@ -8,11 +8,12 @@ The authoritative design and rules live in [`project-memory-bank/`](project-memo
 Read `99-development-rules.md` and `03-current-state.md` first.
 
 ## Status
-Phase 1 **Memory Core** and Phase 2 **Knowledge Graph** complete (Phase Gates approved).
-Phase 3 **Semantic Query Engine** implemented (hybrid vector + graph retrieval,
-trust-aware ranking, query planning) — awaiting its Phase Gate; hybrid retrieval beats
-the vector-only baseline on a labeled fixture. Trust metadata is first-class on every
-memory, entity, and relationship, and informs ranking. See
+Phases 1–3 complete (Phase Gates approved): **Memory Core**, **Knowledge Graph**, and
+**Semantic Query Engine** (hybrid vector + graph retrieval that beats the vector-only
+baseline on a labeled fixture). Phase 4 **Trust Engine** implemented (explainable trust
+scoring, confidence model, source registry, verification policy, contradiction detection)
+— awaiting its Phase Gate; it replaces the 0.5 confidence placeholder via additive
+injection. Trust metadata is first-class on every memory, entity, and relationship. See
 `project-memory-bank/04-roadmap.md`.
 
 ## Quickstart
@@ -48,5 +49,6 @@ asyncio.run(main())
 - `scp/memory/` — Memory Core (models, port, backends, lifecycle, service).
 - `scp/graph/` — Knowledge Graph (models, port, backends, traversal, service).
 - `scp/query/` — Semantic Query Engine (embeddings, vector store, ranking, planner, engine).
+- `scp/trust/` — Trust Engine (source registry, confidence model, scoring, verification, contradiction, engine).
 - `tests/` — unit + integration tests (mirrors source paths).
 - `project-memory-bank/` — source of truth: vision, architecture, roadmap, ADRs, rules.

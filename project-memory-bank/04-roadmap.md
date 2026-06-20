@@ -8,8 +8,8 @@
 | 0 | Memory Bank Bootstrap | **Complete** |
 | 1 | Memory Core | **Complete — Phase Gate approved** |
 | 2 | Knowledge Graph | **Complete — Phase Gate approved** |
-| 3 | Semantic Query Engine | **Implemented — awaiting Phase Gate approval** |
-| 4 | Trust Engine | Not started |
+| 3 | Semantic Query Engine | **Complete — Phase Gate approved** |
+| 4 | Trust Engine | **Implemented — awaiting Phase Gate approval** |
 | 5 | Agent Runtime | Not started |
 | 6 | Agent Flight Recorder | Not started |
 | 7 | Governance Layer | Not started |
@@ -38,6 +38,15 @@ vector-only baseline on a labeled fixture (recall@5 1.0 vs 0.0).
 
 ## Phase 4 — Trust Engine
 Trust Scores · Confidence Models · Source Tracking · Verification · Contradiction Detection (`14-trust-model.md`).
+Implemented under `scp/trust/` (ADR-005) as a pure, deterministic, synchronous engine over
+the trust primitives every item already carries: a `SourceRegistry` (reliability weighting),
+a `ConfidenceModel` (real per-source confidence — replaces the 0.5 placeholder), explainable
+`scoring` (`base = weighted blend of reliability/confidence/recency`, gated by a verification
+factor; every `TrustAssessment` is reconstructable), a signal-driven `VerificationPolicy`
+state machine, and a `ContradictionDetector` with reliability-weighted reconciliation. The
+0.5 placeholder is replaced in the live path via an **additive** optional `confidence_model`
+callable injected into `MemoryCore`/`KnowledgeGraph` (no Phase 1/2 → Phase 4 dependency).
+Exit met: scores explainable/reproducible; the placeholder is gone when the engine is wired.
 
 ## Phase 5 — Agent Runtime
 Context Assembly · Tool Invocation · Memory Access · Agent Lifecycle.

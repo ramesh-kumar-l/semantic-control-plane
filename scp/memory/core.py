@@ -29,8 +29,11 @@ from .models import (
 )
 from .store import MemoryQuery, MemoryStore
 
-# Placeholder confidence used until the Trust Engine (Phase 4) computes real scores.
+# Fallback confidence when neither an explicit value nor a confidence model is given.
 DEFAULT_CONFIDENCE = 0.5
+
+# A source-aware confidence model (the Trust Engine's `initial_confidence`, Phase 4).
+ConfidenceModel = Callable[[Source, VerificationStatus], float]
 
 
 def _utcnow() -> datetime:
@@ -51,11 +54,15 @@ class MemoryCore:
         clock: Callable[[], datetime] = _utcnow,
         id_factory: Callable[[], str] = lambda: uuid.uuid4().hex,
         default_confidence: float = DEFAULT_CONFIDENCE,
+        confidence_model: ConfidenceModel | None = None,
     ) -> None:
         self._store = store
         self._clock = clock
         self._new_id = id_factory
         self._default_confidence = default_confidence
+        # When wired, the Trust Engine computes real source-aware confidence,
+        # replacing the flat `default_confidence` placeholder (`14-trust-model.md`).
+        self._confidence_model = confidence_model
 
     async def close(self) -> None:
         """Release the underlying store's resources."""
@@ -79,7 +86,7 @@ class MemoryCore:
         ingest = ProvenanceEntry(operation=ProvenanceOperation.INGEST, timestamp=now)
         trust = TrustMetadata(
             source=source,
-            confidence=self._default_confidence if confidence is None else confidence,
+            confidence=self._resolve_confidence(source, confidence, verification_status),
             verification_status=verification_status,
             provenance=(ingest,),
         )
@@ -163,6 +170,16 @@ class MemoryCore:
             )
             await self._store.update(superseded)
         return merged
+
+    def _resolve_confidence(
+        self, source: Source, confidence: float | None, verification_status: VerificationStatus
+    ) -> float:
+        """Explicit value wins; else the wired confidence model; else the fallback."""
+        if confidence is not None:
+            return confidence
+        if self._confidence_model is not None:
+            return self._confidence_model(source, verification_status)
+        return self._default_confidence
 
     async def _transition(self, memory_id: str, target: LifecycleState) -> MemoryRecord:
         record = await self._require(memory_id)

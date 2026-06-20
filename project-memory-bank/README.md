@@ -40,5 +40,6 @@ The **primary source of truth** for the Semantic Control Plane (SCP). Never assu
 - `adr/ADR-002-memory-core-storage.md` — SQLite behind a `MemoryStore` port (Phase 1).
 - `adr/ADR-003-knowledge-graph-storage.md` — SQLite + app-side BFS behind a `GraphStore` port (Phase 2).
 - `adr/ADR-004-semantic-query-engine.md` — hashing embedder + cosine index + hybrid retrieval behind `Embedder`/`VectorStore` ports (Phase 3).
+- `adr/ADR-005-trust-engine.md` — explainable trust scoring + confidence model + verification policy + contradiction detection; replaces the 0.5 placeholder via additive `confidence_model` injection (Phase 4).
 
 > Keep these files synchronized with implementation progress. Update `03`, `26`, and `30` at the end of each session.

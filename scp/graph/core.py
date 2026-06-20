@@ -34,8 +34,11 @@ from .models import Entity, Relationship
 from .store import EntityQuery, GraphStore, RelationshipQuery
 from .traversal import TraversalResult
 
-# Placeholder confidence used until the Trust Engine (Phase 4) computes real scores.
+# Fallback confidence when neither an explicit value nor a confidence model is given.
 DEFAULT_CONFIDENCE = 0.5
+
+# A source-aware confidence model (the Trust Engine's `initial_confidence`, Phase 4).
+ConfidenceModel = Callable[[Source, VerificationStatus], float]
 
 
 def _utcnow() -> datetime:
@@ -55,11 +58,15 @@ class KnowledgeGraph:
         clock: Callable[[], datetime] = _utcnow,
         id_factory: Callable[[], str] = lambda: uuid.uuid4().hex,
         default_confidence: float = DEFAULT_CONFIDENCE,
+        confidence_model: ConfidenceModel | None = None,
     ) -> None:
         self._store = store
         self._clock = clock
         self._new_id = id_factory
         self._default_confidence = default_confidence
+        # When wired, the Trust Engine computes real source-aware confidence,
+        # replacing the flat `default_confidence` placeholder (`14-trust-model.md`).
+        self._confidence_model = confidence_model
 
     async def close(self) -> None:
         """Release the underlying store's resources."""
@@ -272,9 +279,16 @@ class KnowledgeGraph:
         verification_status: VerificationStatus,
     ) -> TrustMetadata:
         ingest = ProvenanceEntry(operation=ProvenanceOperation.INGEST, timestamp=now)
+        source = Source(type=source_type, identifier=source_identifier)
+        if confidence is not None:
+            resolved = confidence
+        elif self._confidence_model is not None:
+            resolved = self._confidence_model(source, verification_status)
+        else:
+            resolved = self._default_confidence
         return TrustMetadata(
-            source=Source(type=source_type, identifier=source_identifier),
-            confidence=self._default_confidence if confidence is None else confidence,
+            source=source,
+            confidence=resolved,
             verification_status=verification_status,
             provenance=(ingest,),
         )
