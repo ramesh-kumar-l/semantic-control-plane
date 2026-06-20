@@ -7,8 +7,8 @@
 |---|---|---|
 | 0 | Memory Bank Bootstrap | **Complete** |
 | 1 | Memory Core | **Complete — Phase Gate approved** |
-| 2 | Knowledge Graph | **Implemented — awaiting Phase Gate approval** |
-| 3 | Semantic Query Engine | Not started |
+| 2 | Knowledge Graph | **Complete — Phase Gate approved** |
+| 3 | Semantic Query Engine | **Implemented — awaiting Phase Gate approval** |
 | 4 | Trust Engine | Not started |
 | 5 | Agent Runtime | Not started |
 | 6 | Agent Flight Recorder | Not started |
@@ -29,6 +29,12 @@ the graph is explicitly **out of scope** here — it belongs to Phase 3.
 
 ## Phase 3 — Semantic Query Engine
 Hybrid Retrieval · Vector Search · Graph Search · Ranking · Query Planning.
+Implemented under `scp/query/` (ADR-004): a deterministic offline `HashingEmbedder`
+behind an `Embedder` port; an `InMemoryVectorStore` behind a `VectorStore` port (a
+derived, rebuildable cosine index); hybrid retrieval = vector seeds expanded via Phase 2
+`traverse`; trust-aware, explainable ranking (semantic + graph proximity + trust); and a
+rule-based planner choosing vector_only / graph_only / hybrid. Exit met: hybrid beats the
+vector-only baseline on a labeled fixture (recall@5 1.0 vs 0.0).
 
 ## Phase 4 — Trust Engine
 Trust Scores · Confidence Models · Source Tracking · Verification · Contradiction Detection (`14-trust-model.md`).
